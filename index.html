@@ -1,0 +1,221 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="icon.png" type="image/x-icon">
+    <title>VPlay</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "mindar-image-three":"https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+      }
+    }
+    </script>
+    <script type="module">
+        const targetsName = {
+            0: "BaiChoi",
+            1: "BitMatBatDe",
+            2: "ChoiOLang",
+            3: "ChoiTrau",
+            4: "CuopCo",
+            5: "DaGa",
+            6: "DanhChuyen",
+            7: "DanhCu",
+            8: "DanhKhang",
+            9: "DanhThe",
+            10: "DapNieuDat",
+            11: "DiCaKheo",
+            12: "KeoCo",
+            13: "NemCon",
+            14: "NemVong",
+            15: "NhayBaoBo",
+            16: "NhaySap",
+            17: "OAnQuan",
+            18: "RongRanLenMay",
+            19: "ThaDieu",
+            20: "ThaThuyenGiay"
+        };
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'https://unpkg.com/three/examples/jsm/loaders/GLTFLoader.js';
+        import { MindARThree } from 'mindar-image-three';
+        const mindarThree = new MindARThree({
+            container: document.querySelector("#container"),
+            imageTargetSrc: "targets.mind"
+        });
+        const { renderer, scene, camera } = mindarThree;
+        const loader = new GLTFLoader();
+
+        const anchors = [];
+        const numTargets = 21; // Thay N bằng số lượng target thực tế
+
+        for (let i = 0; i < numTargets; i++) {
+            const anchor = mindarThree.addAnchor(i);
+
+            //video
+            const video = document.createElement("video");
+            video.src = `video/${targetsName[i]}.mp4`;
+            video.crossOrigin = "anonymous";
+            video.loop = true;
+            video.muted = true;
+            video.playsInline = true;
+
+            // audio
+            const audio = new Audio(`audio/${targetsName[i]}.mp3`);
+            audio.loop = false;
+
+            // after end 3s, restart audio
+            audio.addEventListener("ended", () => {
+                console.log("Audio ended, restarting in 3 seconds...");
+                setTimeout(() => {
+                    audio.currentTime = 0;
+                    audio.play();
+                }, 3000);  // Sau 3 giây, phát lại
+            });
+
+            const videoTexture = new THREE.VideoTexture(video);
+            videoTexture.flipY = false;
+            // Model (TV.glb)
+            loader.load('TV.glb', (gltf) => {
+                const model = gltf.scene;
+                model.scale.set(0.0001, 0.0001, 0.0001);  // Scale the model
+                model.position.set(0, -0.5, 0);  // Position the model
+                model.rotation.set(0, -Math.PI / 2, 0);  // Rotation of the model
+
+                // Duyệt qua tất cả các đối tượng trong mô hình GLB và tự động áp dụng vật liệu MeshBasicMaterial với texture
+                model.traverse((child) => {
+                    if (child.isMesh) {
+
+                        if (child.material.name === '02 - Default') {
+                            console.log(`VideoTexture name: ${child.material.name}`);
+                            child.material = new THREE.MeshBasicMaterial({
+                                map: videoTexture,  // Gán VideoTexture cho material
+                                transparent: false    // Nếu video có độ trong suốt
+                            });
+                        }
+                        else if (child.material.map) {
+                            child.material = new THREE.MeshBasicMaterial({
+                                map: child.material.map,  // Giữ lại texture hiện tại
+                                transparent: child.material.transparent,  // Giữ lại thuộc tính transparent của texture
+                            });
+                        } else {
+                            // Nếu không có texture, chỉ áp dụng màu sắc mặc định
+                            child.material = new THREE.MeshBasicMaterial({
+                                color: 0xffffff,  // Màu sắc mặc định (trắng)
+                            });
+                        }
+                    }
+                });
+
+                anchor.group.add(model);  // Add the model to the anchor
+            });
+
+            anchor.onTargetFound = () => {
+                console.log(`Target ${i} detected!`);
+                video.play();
+                audio.currentTime = 0;
+                audio.play();
+            };
+            anchor.onTargetLost = () => {
+                console.log(`Target ${i} lost!`);
+                video.pause();
+                audio.pause();
+            };
+            anchors.push(anchor);
+        }
+
+        const start = async () => {
+            await mindarThree.start();
+            renderer.setAnimationLoop(() => {
+                renderer.render(scene, camera);
+            });
+        }
+        // const startButton = document.querySelector("#startButton");
+        // startButton.addEventListener("click", () => {
+        //     start();
+        // });
+        // stopButton.addEventListener("click", () => {
+        //     mindarThree.stop();
+        //     mindarThree.renderer.setAnimationLoop(null);
+        // });
+
+        window.addEventListener("load", () => {
+            start();
+        });
+
+        window.addEventListener("beforeunload", () => {
+            mindarThree.stop();
+            mindarThree.renderer.setAnimationLoop(null);
+        });
+        const fullscreenButton = document.querySelector("#fullscreenButton");
+        const fullscreenIcon = document.querySelector("#fullscreenIcon");
+
+        fullscreenButton.addEventListener("click", () => {
+            const elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                elem.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener("fullscreenchange", () => {
+            if (document.fullscreenElement) {
+                fullscreenIcon.classList.remove("fa-expand");
+                fullscreenIcon.classList.add("fa-compress");
+            } else {
+                fullscreenIcon.classList.remove("fa-compress");
+                fullscreenIcon.classList.add("fa-expand");
+            }
+        });
+    </script>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        #fullscreen-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        #fullscreenButton {
+            background-color: rgba(0, 0, 0, 0.6);
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            color: white;
+            font-size: 20px;
+        }
+
+        #fullscreenButton:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="fullscreen-toggle">
+        <button id="fullscreenButton">
+            <i id="fullscreenIcon" class="fas fa-expand"></i>
+        </button>
+    </div>
+    <div id="container">
+    </div>
+</body>
+
+</html>
