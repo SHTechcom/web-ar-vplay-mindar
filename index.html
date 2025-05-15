@@ -51,12 +51,11 @@
 
         const anchors = [];
         const numTargets = 21; // Thay N bằng số lượng target thực tế
-        const language = 'vn';
+        let language = "en";
 
         for (let i = 0; i < numTargets; i++) {
             const anchor = mindarThree.addAnchor(i);
 
-            //video
             const video = document.createElement("video");
             video.src = `video/${targetsName[i]}.mp4`;
             video.crossOrigin = "anonymous";
@@ -64,74 +63,68 @@
             video.muted = true;
             video.playsInline = true;
 
-            // audio
-            const audio = new Audio(`audio/${language}/${targetsName[i]}.mp3`);
-            audio.loop = false;
-
-            // after end 3s, restart audio
-            audio.addEventListener("ended", () => {
-                console.log("Audio ended, restarting in 3 seconds...");
-                setTimeout(() => {
-                    audio.currentTime = 0;
-                    audio.play();
-                }, 3000);  // Sau 3 giây, phát lại
-            });
-
             const videoTexture = new THREE.VideoTexture(video);
             videoTexture.flipY = false;
-            // Model (TV.glb)
+
             loader.load('TV.glb', (gltf) => {
                 const model = gltf.scene;
-                model.scale.set(0.0001, 0.0001, 0.0001);  // Scale the model
-                model.position.set(0, -0.5, 0);  // Position the model
-                model.rotation.set(0, -Math.PI / 2, 0);  // Rotation of the model
+                model.scale.set(0.0001, 0.0001, 0.0001);
+                model.position.set(0, -0.5, 0);
+                model.rotation.set(0, -Math.PI / 2, 0);
 
-                // Duyệt qua tất cả các đối tượng trong mô hình GLB và tự động áp dụng vật liệu MeshBasicMaterial với texture
                 model.traverse((child) => {
                     if (child.isMesh) {
-
                         if (child.material.name === '02 - Default') {
-                            console.log(`VideoTexture name: ${child.material.name}`);
+                            child.material = new THREE.MeshBasicMaterial({ map: videoTexture });
+                        } else if (child.material.map) {
                             child.material = new THREE.MeshBasicMaterial({
-                                map: videoTexture,  // Gán VideoTexture cho material
-                                transparent: false    // Nếu video có độ trong suốt
-                            });
-                        }
-                        else if (child.material.map) {
-                            child.material = new THREE.MeshBasicMaterial({
-                                map: child.material.map,  // Giữ lại texture hiện tại
-                                transparent: child.material.transparent,  // Giữ lại thuộc tính transparent của texture
+                                map: child.material.map,
+                                transparent: child.material.transparent
                             });
                         } else {
-                            // Nếu không có texture, chỉ áp dụng màu sắc mặc định
-                            child.material = new THREE.MeshBasicMaterial({
-                                color: 0xffffff,  // Màu sắc mặc định (trắng)
-                            });
+                            child.material = new THREE.MeshBasicMaterial({ color: 0xffffff });
                         }
                     }
                 });
 
-                anchor.group.add(model);  // Add the model to the anchor
+                anchor.group.add(model);
             });
 
             anchor.onTargetFound = () => {
                 console.log(`Target ${i} detected!`);
                 video.play();
+
+                const audio = new Audio(`audio/${language}/${targetsName[i]}.mp3`);
+                audio.loop = false;
                 audio.currentTime = 0;
                 audio.play();
+
+                audio.addEventListener("ended", () => {
+                    console.log("Audio ended, restarting in 3 seconds...");
+                    setTimeout(() => {
+                        audio.currentTime = 0;
+                        audio.play();
+                    }, 3000);
+                });
+
+                anchor.audio = audio;
             };
+
             anchor.onTargetLost = () => {
                 console.log(`Target ${i} lost!`);
                 video.pause();
-                audio.pause();
+                if (anchor.audio) {
+                    anchor.audio.pause();
+                    anchor.audio = null;
+                }
             };
+
             anchors.push(anchor);
-            break;
         }
 
         const languageButton = document.querySelector("#languageButton");
         languageButton.addEventListener("click", () => {
-            this.language = this.language == 'vn' ? 'en' : 'vn';
+            language = language == "vn" ? "en" : "vn";
             languageButton.textContent = language;
         });
 
@@ -236,7 +229,7 @@
             <i id="fullscreenIcon" class="fas fa-expand"></i>
         </button>
         <div id="language-toggle">
-            <button id="languageButton">vn</button>
+            <button id="languageButton">en</button>
         </div>
 
     </div>
