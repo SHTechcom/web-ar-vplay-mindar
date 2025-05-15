@@ -51,6 +51,7 @@
 
         const anchors = [];
         const numTargets = 21; // Thay N bằng số lượng target thực tế
+        let language = 'vn';
 
         for (let i = 0; i < numTargets; i++) {
             const anchor = mindarThree.addAnchor(i);
@@ -64,7 +65,7 @@
             video.playsInline = true;
 
             // audio
-            const audio = new Audio(`audio/${targetsName[i]}.mp3`);
+            const audio = new Audio(`audio/${language}/${targetsName[i]}.mp3`);
             audio.loop = false;
 
             // after end 3s, restart audio
@@ -128,6 +129,12 @@
             break;
         }
 
+        const languageButton = document.querySelector("#languageButton");
+        languageButton.addEventListener("click", () => {
+            language = language == 'vn' ? 'en' : 'vn';
+            languageButton.textContent = language;
+        });
+
         const start = async () => {
             await mindarThree.start();
             renderer.setAnimationLoop(() => {
@@ -172,6 +179,7 @@
                 fullscreenIcon.classList.add("fa-expand");
             }
         });
+
     </script>
     <style>
         body {
@@ -206,6 +214,27 @@
         #fullscreenButton:hover {
             background-color: rgba(0, 0, 0, 0.8);
         }
+
+        #language-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        #languageButton {
+            background-color: rgba(0, 0, 0, 0.6);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            color: white;
+            font-size: 16px;
+        }
+
+        #languageButton:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
     </style>
 </head>
 
@@ -214,6 +243,10 @@
         <button id="fullscreenButton">
             <i id="fullscreenIcon" class="fas fa-expand"></i>
         </button>
+        <div id="language-toggle">
+            <button id="languageButton">vn</button>
+        </div>
+
     </div>
     <div id="container">
     </div>
