@@ -18,26 +18,25 @@
     <script type="module">
         const targetsName = {
             0: "BaiChoi",
-            1: "BitMatBatDe",
-            2: "ChoiOLang",
-            3: "ChoiTrau",
-            4: "CuopCo",
-            5: "DaGa",
-            6: "DanhChuyen",
-            7: "DanhCu",
-            8: "DanhKhang",
-            9: "DanhThe",
-            10: "DapNieuDat",
-            11: "DiCaKheo",
-            12: "KeoCo",
-            13: "NemCon",
-            14: "NemVong",
-            15: "NhayBaoBo",
-            16: "NhaySap",
-            17: "OAnQuan",
-            18: "RongRanLenMay",
-            19: "ThaDieu",
-            20: "ThaThuyenGiay"
+            1: "CaHue",
+            2: "CaiLuong",
+            3: "CaTru",
+            4: "DonCaTaiTu",
+            5: "HatCheo",
+            6: "HatCoLa",
+            7: "HatEDe",
+            8: "HatPaoDung",
+            9: "HatRu",
+            10: "HatThen",
+            11: "HatTrauVan",
+            12: "HatTrongQuan",
+            13: "HatXoanPhuTho",
+            14: "HoaKhoanLeThuy",
+            15: "HoDongThap",
+            16: "HoGiaGao",
+            17: "HoHue",
+            18: "LyConSao",
+            19: "QuanHoBacNinh"
         };
         import * as THREE from 'three';
         import { GLTFLoader } from 'https://unpkg.com/three/examples/jsm/loaders/GLTFLoader.js';
@@ -52,6 +51,7 @@
         const anchors = [];
         const numTargets = 21; // Thay N bằng số lượng target thực tế
         let language = "en";
+        let targetDetected = "";
 
         for (let i = 0; i < numTargets; i++) {
             const anchor = mindarThree.addAnchor(i);
@@ -92,9 +92,10 @@
 
             anchor.onTargetFound = () => {
                 console.log(`Target ${i} detected!`);
+                targetDetected = targetsName[i];
                 video.play();
 
-                const audio = new Audio(`audio/${language}/${targetsName[i]}.mp3`);
+                const audio = new Audio(`music/${targetDetected}.mp3`);
                 audio.loop = false;
                 audio.currentTime = 0;
                 audio.play();
@@ -122,10 +123,32 @@
             anchors.push(anchor);
         }
 
-        const languageButton = document.querySelector("#languageButton");
-        languageButton.addEventListener("click", () => {
-            language = language == "vn" ? "en" : "vn";
-            languageButton.textContent = language;
+        //play audio en
+        const audioEN = new Audio();
+        const languageButtonEN = document.querySelector("#languageButton-en");
+        languageButtonEN.addEventListener("click", () => {
+            if (audioEN.playing) {
+                audioEN.pause();
+                return;
+            }
+            audioEN.src = `audio2/en/${targetDetected}.mp3`;
+            audioEN.loop = false;
+            audioEN.currentTime = 0;
+            audioEN.play();
+        });
+
+        //play audio vn
+        const audioVN = new Audio();
+        const languageButtonVN = document.querySelector("#languageButton-vn");
+        languageButtonVN.addEventListener("click", () => {
+            if (audioEN.playing) {
+                audioEN.pause();
+                return;
+            }
+            audioVN.src = `audio2/vn/${targetDetected}.mp3`;
+            audioVN.loop = false;
+            audioVN.currentTime = 0;
+            audioVN.play();
         });
 
         const start = async () => {
@@ -200,14 +223,18 @@
             background-color: rgba(0, 0, 0, 0.8);
         }
 
-        #language-toggle {
+        .language-toggle {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 10;
         }
 
-        #languageButton {
+        .language-toggle.en {
+            top: 60px;
+        }
+
+        .languageButton {
             background-color: rgba(0, 0, 0, 0.6);
             border: none;
             border-radius: 8px;
@@ -217,10 +244,16 @@
             font-size: 16px;
         }
 
-        #languageButton:hover {
+        .languageButton:hover {
             background-color: rgba(0, 0, 0, 0.8);
         }
     </style>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
 </head>
 
 <body>
@@ -228,10 +261,12 @@
         <button id="fullscreenButton">
             <i id="fullscreenIcon" class="fas fa-expand"></i>
         </button>
-        <div id="language-toggle">
-            <button id="languageButton">en</button>
+        <div class="language-toggle en" id="language-toggle-en">
+            <button class="languageButton en" id="languageButton-en">en</button>
         </div>
-
+        <div class="language-toggle vn" id="language-toggle-vn">
+            <button class="languageButton vn" id="languageButton-vn">vn</button>
+        </div>
     </div>
     <div id="container">
     </div>
