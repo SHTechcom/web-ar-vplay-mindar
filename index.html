@@ -51,7 +51,7 @@
         const anchors = [];
         const numTargets = 21; // Thay N bằng số lượng target thực tế
         let language = "en";
-        let targetDetected = "";
+        let targetDetected = targetsName[0];
 
         for (let i = 0; i < numTargets; i++) {
             const anchor = mindarThree.addAnchor(i);
@@ -123,32 +123,70 @@
             anchors.push(anchor);
         }
 
-        //play audio en
-        const audioEN = new Audio();
+        //🔇🔊
         const languageButtonEN = document.querySelector("#languageButton-en");
-        languageButtonEN.addEventListener("click", () => {
-            if (audioEN.playing) {
-                audioEN.pause();
-                return;
+        const audioEN = new Audio();
+        const languageButtonVN = document.querySelector("#languageButton-vn");
+        const audioVN = new Audio();
+
+        const onPlay = (lang) => {
+            if (lang === "en") {
+                languageButtonEN.textContent = "en 🔊";
+            } else if (lang === "vn") {
+                languageButtonVN.textContent = "vn 🔊";
             }
-            audioEN.src = `audio2/en/${targetDetected}.mp3`;
-            audioEN.loop = false;
-            audioEN.currentTime = 0;
-            audioEN.play();
+        }
+
+        const onPaused = (lang) => {
+            if (lang === "en") {
+                languageButtonEN.textContent = "en 🔇";
+                audioEN.pause();
+            } else if (lang === "vn") {
+                languageButtonVN.textContent = "vn 🔇";
+                audioVN.pause();
+            }
+        }
+
+        const onEnded = (lang) => {
+            if (lang === "en") {
+                languageButtonEN.textContent = "en 🔇";
+            } else if (lang === "vn") {
+                languageButtonVN.textContent = "vn 🔇";
+            }
+        }
+
+        //play audio en
+        audioEN.loop = false;
+        audioEN.onplay = () => onPlay("en");
+        audioEN.onpause = () => onPaused("en");
+        audioEN.onended = () => onEnded("en");
+        languageButtonEN.addEventListener("click", () => {
+            if (!audioEN.paused && !audioEN.ended && audioEN.currentTime > 0) {
+                audioEN.pause();
+            }
+            else {
+                onPaused("vn");
+                audioEN.src = `audio2/en/${targetDetected}.mp3`;
+                audioEN.currentTime = 0;
+                audioEN.play();
+            }
         });
 
         //play audio vn
-        const audioVN = new Audio();
-        const languageButtonVN = document.querySelector("#languageButton-vn");
+        audioVN.loop = false;
+        audioVN.onplay = () => onPlay("vn");
+        audioVN.onpause = () => onPaused("vn");
+        audioVN.onended = () => onEnded("vn");
         languageButtonVN.addEventListener("click", () => {
-            if (audioEN.playing) {
-                audioEN.pause();
-                return;
+            if (!audioVN.paused && !audioVN.ended && audioVN.currentTime > 0) {
+                audioVN.pause();
             }
-            audioVN.src = `audio2/vn/${targetDetected}.mp3`;
-            audioVN.loop = false;
-            audioVN.currentTime = 0;
-            audioVN.play();
+            else {
+                onPaused("en");
+                audioVN.src = `audio2/vn/${targetDetected}.mp3`;
+                audioVN.currentTime = 0;
+                audioVN.play();
+            }
         });
 
         const start = async () => {
@@ -230,15 +268,11 @@
             z-index: 10;
         }
 
-        .language-toggle.en {
-            top: 60px;
-        }
-
         .languageButton {
             background-color: rgba(0, 0, 0, 0.6);
             border: none;
             border-radius: 8px;
-            padding: 10px 16px;
+            padding: 8px 8px;
             cursor: pointer;
             color: white;
             font-size: 16px;
@@ -246,6 +280,7 @@
 
         .languageButton:hover {
             background-color: rgba(0, 0, 0, 0.8);
+            scale: 1.05;
         }
     </style>
     <!-- Bootstrap CSS -->
@@ -261,11 +296,9 @@
         <button id="fullscreenButton">
             <i id="fullscreenIcon" class="fas fa-expand"></i>
         </button>
-        <div class="language-toggle en" id="language-toggle-en">
-            <button class="languageButton en" id="languageButton-en">en</button>
-        </div>
-        <div class="language-toggle vn" id="language-toggle-vn">
-            <button class="languageButton vn" id="languageButton-vn">vn</button>
+        <div class="language-toggle" id="language-toggle">
+            <button class="languageButton en" id="languageButton-en">en 🔇</button>
+            <button class="languageButton vn" id="languageButton-vn">vn 🔇</button>
         </div>
     </div>
     <div id="container">
