@@ -54,6 +54,22 @@
         let language = "en";
         let targetDetected = targetsName[0];
 
+        const audioMusic = new Audio();
+        const musicButton = document.getElementById("musicButton");
+        audioMusic.loop = false;
+        audioMusic.onplay = () => { musicButton.textContent = "🔊"; }
+        audioMusic.onpause = () => { musicButton.textContent = "🔇"; }
+        audioMusic.onended = () => { musicButton.textContent = "🔇"; }
+        musicButton.addEventListener("click", () => {
+            if (!audioMusic.paused && !audioMusic.ended && audioMusic.currentTime > 0) {
+                audioMusic.pause();
+            } else {
+                audioMusic.src = `music/${targetDetected}.mp3`;
+                audioMusic.currentTime = 0;
+                audioMusic.play();
+            }
+        });
+
         for (let i = 0; i < numTargets; i++) {
             const anchor = mindarThree.addAnchor(i);
 
@@ -94,31 +110,33 @@
                 console.log(`Target ${i} detected!`);
                 targetDetected = targetsName[i];
                 video.play();
+                musicButton.disabled = false;
+                // const audio = new Audio(`music/${targetDetected}.mp3`);
+                // audio.loop = false;
+                // audio.currentTime = 0;
+                // audio.play();
 
-                const audio = new Audio(`music/${targetDetected}.mp3`);
-                audio.loop = false;
-                audio.currentTime = 0;
-                audio.play();
+                // audio.addEventListener("ended", () => {
+                //     console.log("Audio ended, restarting in 3 seconds...");
+                //     setTimeout(() => {
+                //         audio.muted = false;
+                //         audio.currentTime = 0;
+                //         audio.play();
+                //     }, 3000);
+                // });
 
-                audio.addEventListener("ended", () => {
-                    console.log("Audio ended, restarting in 3 seconds...");
-                    setTimeout(() => {
-                        audio.muted = false;
-                        audio.currentTime = 0;
-                        audio.play();
-                    }, 3000);
-                });
-
-                anchor.audio = audio;
+                // anchor.audio = audio;
             };
 
             anchor.onTargetLost = () => {
                 console.log(`Target ${i} lost!`);
                 video.pause();
-                if (anchor.audio) {
-                    anchor.audio.pause();
-                    anchor.audio = null;
-                }
+                musicButton.disabled = true;
+                audioMusic.pause();
+                // if (anchor.audio) {
+                //     anchor.audio.pause();
+                //     anchor.audio = null;
+                // }
             };
 
             anchors.push(anchor);
@@ -227,6 +245,11 @@
             }
         });
 
+        const intro = document.querySelector('.intro');
+        setTimeout(() => {
+            intro.style.display = 'none';
+        }, 3000); // 3s = thời gian hiệu ứng
+
     </script>
     <style>
         body {
@@ -302,6 +325,47 @@
             border-radius: 6px;
             font-family: 'Poppins', sans-serif;
         }
+
+        .intro {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            z-index: 9999;
+        }
+
+        .intro-image {
+            width: 400px;
+            height: auto;
+            animation: zoomOutFade 3s ease-out forwards;
+        }
+
+        .intro-text {
+            position: absolute;
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+            z-index: 2;
+            animation: fadeInDown 2s ease-out;
+        }
+
+        /* Keyframes for zoom out and fade */
+        @keyframes zoomOutFade {
+            0% {
+                transform: scale(2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
     </style>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -320,9 +384,15 @@
         <div class="language-toggle" id="language-toggle">
             <button class="languageButton en" id="languageButton-en">en 🔇</button>
             <button class="languageButton vn" id="languageButton-vn">vn 🔇</button>
+            <button class="languageButton musicButton" id="musicButton" disabled>🔇</button>
         </div>
         <div class="copyright">ViePlay</div>
     </div>
+    <div class="intro">
+        <div class="intro-text">ViePlay</div>
+        <img src="ban-do-viet-nam-cua-ban-da-co-hoang-sa-truong-sa-chua.jpeg" alt="Intro Image" class="intro-image" />
+    </div>
+
     <div id="container">
         <!-- hiển thị hình ảnh AR tại đây -->
     </div>
