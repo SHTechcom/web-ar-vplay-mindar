@@ -143,6 +143,8 @@
         }
 
         //🔇🔊
+        const languageButtonM = document.querySelector("#languageButton-mong");
+        const audioM = new Audio();
         const languageButtonEN = document.querySelector("#languageButton-en");
         const audioEN = new Audio();
         const languageButtonVN = document.querySelector("#languageButton-vn");
@@ -151,8 +153,12 @@
         const onPlay = (lang) => {
             if (lang === "en") {
                 languageButtonEN.textContent = "en 🔊";
-            } else if (lang === "vn") {
+            }
+            if (lang === "vn") {
                 languageButtonVN.textContent = "vn 🔊";
+            }
+            if (lang === "mong") {
+                languageButtonM.textContent = "mong 🔊";
             }
         }
 
@@ -160,19 +166,46 @@
             if (lang === "en") {
                 languageButtonEN.textContent = "en 🔇";
                 audioEN.pause();
-            } else if (lang === "vn") {
+            }
+            if (lang === "vn") {
                 languageButtonVN.textContent = "vn 🔇";
                 audioVN.pause();
+            }
+            if (lang === "mong") {
+                languageButtonM.textContent = "mong 🔇";
+                audioM.pause();
             }
         }
 
         const onEnded = (lang) => {
             if (lang === "en") {
                 languageButtonEN.textContent = "en 🔇";
-            } else if (lang === "vn") {
+            }
+            if (lang === "vn") {
                 languageButtonVN.textContent = "vn 🔇";
             }
+            if (lang === "mong") {
+                languageButtonM.textContent = "mong 🔇";
+            }
         }
+
+        //play audio mong
+        audioM.loop = false;
+        audioM.onplay = () => onPlay("mong");
+        audioM.onpause = () => onPaused("mong");
+        audioM.onended = () => onEnded("mong");
+        languageButtonM.addEventListener("click", () => {
+            if (!audioM.paused && !audioM.ended && audioM.currentTime > 0) {
+                audioM.pause();
+            }
+            else {
+                onPaused("vn");
+                onPaused("en");
+                audioM.src = `audio/mong/${targetDetected}.mp3`;
+                audioM.currentTime = 0;
+                audioM.play();
+            }
+        });
 
         //play audio en
         audioEN.loop = false;
@@ -185,6 +218,7 @@
             }
             else {
                 onPaused("vn");
+                onPaused("mong");
                 audioEN.src = `audio/en/${targetDetected}.mp3`;
                 audioEN.currentTime = 0;
                 audioEN.play();
@@ -202,6 +236,7 @@
             }
             else {
                 onPaused("en");
+                onPaused("mong");
                 audioVN.src = `audio/vn/${targetDetected}.mp3`;
                 audioVN.currentTime = 0;
                 audioVN.play();
@@ -382,6 +417,7 @@
             <i id="fullscreenIcon" class="fas fa-expand"></i>
         </button>
         <div class="language-toggle" id="language-toggle">
+            <button class="languageButton mong" id="languageButton-mong">mong 🔇</button>
             <button class="languageButton en" id="languageButton-en">en 🔇</button>
             <button class="languageButton vn" id="languageButton-vn">vn 🔇</button>
             <button class="languageButton musicButton" id="musicButton" disabled>🔇</button>
